@@ -9,7 +9,7 @@ import { Note, MousePosition, NoteProto } from "shared/build/src"
 import './Note.css';
 
 export const NotePad: React.FC = () => {
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes] = useState<Map<number, Note>>(new Map<number, Note>());
   const [mousePos, setMousePos] = useState(new MousePosition(0,0));
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export const NotePad: React.FC = () => {
         handleMouseMove
       );
     };
-  }, []);
+  }, [mousePos]);
 
   const [contextMenu, setContextMenu] = React.useState<{
     mouseX: number;
@@ -66,20 +66,48 @@ export const NotePad: React.FC = () => {
 
       const responseBody = await result.json();
       console.warn(responseBody);
-      setNotes(prevNotes => [...prevNotes, responseBody as Note]);
+      const dbNote = responseBody as Note;
+      if(dbNote._id !== undefined)
+      {
+        notes.set(dbNote._id, dbNote);
+        setNotes(notes);
+        console.log(notes)
+      }
 
       console.warn(responseBody as Note);
-
   };
   
+  var updateNote = async (note: Note) => {
+    let result = await fetch(
+      'http://localhost:5000/UpdateNote', {
+          method: "post",
+          body: JSON.stringify(note),
+          headers: {
+              'Content-Type': 'application/json'
+          }
+      });
+
+      const responseBody = await result.json();
+      console.warn(responseBody);
+      const dbNote = responseBody as Note;
+      if(dbNote._id !== undefined)
+      {
+        notes.set(dbNote._id, dbNote);
+        setNotes(notes);
+        console.log(notes)
+      }
+  };
+
   return (
     <div className="NotePad" onContextMenu={handleContextMenu}>
       <IconButton
         onClick={() => makeNote()}>
         <Add/>
       </IconButton>
-      {notes.map((element, index) => {
-        return NoteComponent(element, index);
+      {Array.from(notes.keys()).map((element, index) => {
+        const note = notes.get(element);
+        if(note !== undefined)
+          return NoteComponent(note, index, updateNote);
       })}
       <Menu
         open={contextMenu !== null}

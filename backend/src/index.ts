@@ -38,13 +38,8 @@ app.post("/AddNote", async (req: any, resp: any) => {
         result = result.toObject();
 
         console.log(`1 ${JSON.stringify(result)}`);
-        
 
-        if (result) {
-            resp.send(result);
-        } else {
-            resp.send(result);
-        }
+        resp.send(result);
  
     } catch (e) {
       console.log(e);
@@ -54,12 +49,9 @@ app.post("/AddNote", async (req: any, resp: any) => {
 
 app.post("/UpdateNote", async (req: any, resp: any) => {
     try {
-        // const note = await Note.findById(req.body._id);
-        // note?.updateOne(req.body)
-        // console.log(result);
- 
         let note = await Note.findOneAndUpdate({_id:req.body._id}, req.body);
         console.log(note?.toObject())
+        resp.send(note);
 
     } catch (e) {
       console.log(e);
