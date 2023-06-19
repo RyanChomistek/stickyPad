@@ -1,10 +1,11 @@
 import React, { Component, useState, useEffect, KeyboardEvent } from 'react';
-import { Note, NoteComponent, MousePosition } from './Note';
+import { NoteComponent } from './Note';
 import { Button, IconButton } from "@mui/material";
 import { Add } from '@mui/icons-material';
 import PopupState, { bindTrigger, bindMenu } from 'material-ui-popup-state';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import { Note, MousePosition, NoteProto } from "shared/build/src"
 import './Note.css';
 
 export const NotePad: React.FC = () => {
@@ -49,9 +50,26 @@ export const NotePad: React.FC = () => {
     setContextMenu(null);
   };
 
-  var makeNote = () => {
-    setNotes(prevNotes => [...prevNotes, new Note("title", "body", mousePos)]);
+  var makeNote = async () => {
+    const note = new NoteProto("", "", mousePos);
+    
     closeContextMenu();
+
+    let result = await fetch(
+      'http://localhost:5000/AddNote', {
+          method: "post",
+          body: JSON.stringify(note),
+          headers: {
+              'Content-Type': 'application/json'
+          }
+      });
+
+      const responseBody = await result.json();
+      console.warn(responseBody);
+      setNotes(prevNotes => [...prevNotes, responseBody as Note]);
+
+      console.warn(responseBody as Note);
+
   };
   
   return (
