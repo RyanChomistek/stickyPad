@@ -30,8 +30,20 @@ app.get("/", (req: any, resp: any) => {
     // backend working properly
 });
  
+app.post("/getNotes", async (req: any, resp: any) => {
+    console.log("/getNotes")
+    try {
+        const res = await Note.find({}).exec();
+        resp.send(res);
+    } catch (e) {
+      console.log(e);
+      resp.send("Something Went Wrong");
+    }
+});
+
 app.post("/AddNote", async (req: any, resp: any) => {
     try {
+        console.log("/AddNote")
         console.log(`0 ${JSON.stringify(req.body)}`);
         const note = new Note(req.body);
         let result = await note.save();
@@ -50,6 +62,8 @@ app.post("/AddNote", async (req: any, resp: any) => {
 app.post("/UpdateNote", async (req: any, resp: any) => {
     try {
         let note = await Note.findOneAndUpdate({_id:req.body._id}, req.body);
+        console.log("/UpdateNote")
+        console.log(req.body)
         console.log(note?.toObject())
         resp.send(note);
 
