@@ -5,10 +5,10 @@ import { Add } from '@mui/icons-material';
 import PopupState, { bindTrigger, bindMenu } from 'material-ui-popup-state';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { Note, MousePosition, NoteProto } from "shared/build/src"
+import { Note, MousePosition, NoteProto, IUser, GetNotesRequest, NotePad, MakeNoteRequest } from "shared/build/src"
 import './Note.css';
 
-export const NotePad: React.FC = () => {
+export const NotePadComponent = ({user, notePad}:{user: IUser, notePad: NotePad}) => {
   const [notes, setNotes] = useState<Map<number, Note>>(new Map<number, Note>());
   const [mousePos, setMousePos] = useState(new MousePosition(0,0));
   const [hasDataFromServer, setHasDataFromServer] = useState(false);
@@ -30,16 +30,13 @@ export const NotePad: React.FC = () => {
   }, [mousePos]);
 
   const getNotesFromServer = async () => {
-    if(hasDataFromServer)
-      return;
-
     setHasDataFromServer(true);
     console.warn(hasDataFromServer);
 
     let result = await fetch(
       'http://localhost:5000/getNotes', {
           method: "post",
-          body: "",
+          body: JSON.stringify(new GetNotesRequest(user, notePad)),
           headers: {
               'Content-Type': 'application/json'
           }
@@ -47,6 +44,7 @@ export const NotePad: React.FC = () => {
       const responseBody = await result.json();
       console.warn(responseBody);
       const notesFromServer = responseBody as Note[];
+      const notes = new Map<number, Note>()
       notesFromServer.forEach(x => {
         if(x._id !== undefined)
           notes.set(x._id, x);
@@ -57,8 +55,10 @@ export const NotePad: React.FC = () => {
 
   // Get notes from server 
   useEffect(() => {
+    console.log(notePad)
+    setNotes(new Map<number, Note>())
     getNotesFromServer();
-  }, []);
+  }, [notePad]);
 
   const [contextMenu, setContextMenu] = React.useState<{
     mouseX: number;
@@ -84,14 +84,12 @@ export const NotePad: React.FC = () => {
   };
 
   var makeNote = async () => {
-    const note = new NoteProto("", "", mousePos);
-    
     closeContextMenu();
 
     let result = await fetch(
       'http://localhost:5000/AddNote', {
           method: "post",
-          body: JSON.stringify(note),
+          body: JSON.stringify(new MakeNoteRequest(user, notePad, mousePos)),
           headers: {
               'Content-Type': 'application/json'
           }
@@ -133,10 +131,6 @@ export const NotePad: React.FC = () => {
 
   return (
     <div className="NotePad" onContextMenu={handleContextMenu}>
-      <IconButton
-        onClick={() => makeNote()}>
-        <Add/>
-      </IconButton>
       {Array.from(notes.keys()).map((element, index) => {
         const note = notes.get(element);
         if(note !== undefined)

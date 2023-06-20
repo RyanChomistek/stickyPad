@@ -22,12 +22,12 @@ export function NoteComponent(note: Note, index: number, updateNote:(note:Note)=
   const onStop = (e: DraggableEvent, data: DraggableData) => {
     console.log(e);
     console.log(data);
-    updateNotePosition(note, new MousePosition(data.x, data.y));
+    updateNotePosition(note, new MousePosition(note.pos.x + data.x, note.pos.y + data.y));
   }
 
   return (
-    <div style={{position: 'absolute', top: 0}} key={index}>
-      <Draggable defaultPosition={note.pos} onStop={onStop}>
+    <div style={{position: 'absolute', top: note.pos.y, left: note.pos.x}} key={index}>
+      <Draggable onStop={onStop}>
         <div className="Note">
             <div className='noteInput'>
               <TextField 
