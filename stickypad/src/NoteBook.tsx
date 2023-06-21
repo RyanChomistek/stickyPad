@@ -1,12 +1,12 @@
 import React, { Component, useState, useEffect } from 'react';
 import { NotePadComponent } from './NotePad';
-import { IUser, GetNotePadsRequest,INotePad, MakeNotePadsRequest, NotePad, INote } from 'shared/build/src';
-import { Button, IconButton, Tabs, Tab , Menu, MenuItem, TextField} from "@mui/material";
-import { Add } from '@mui/icons-material';
-
+import { IUser, GetNotePadsRequest, INotePad, MakeNotePadsRequest, NotePad, INote } from 'shared/build/src';
+import { Button, IconButton, Tabs, Tab, Menu, MenuItem, TextField, Drawer, List, ListItem, ListItemText, Box, ListItemButton, Divider, SwipeableDrawer, ListItemIcon } from "@mui/material";
+import { Add, KeyboardArrowLeftRounded, ChevronRightRounded } from '@mui/icons-material';
 export const NoteBook = ({ user }: { user: IUser }) => {
   const [selectedNotePad, setSelectedNotePad] = useState<number>(0);
   const [notePads, setNotePads] = useState<INotePad[]>([]);
+  const [isNotePadDrawerOpen, setIsNotePadDrawerOpen] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,7 +62,7 @@ export const NoteBook = ({ user }: { user: IUser }) => {
   }
 
   const deleteNotePad = (notePad?: INotePad) => {
-    if(!notePad)
+    if (!notePad)
       return;
 
     fetch(
@@ -94,13 +94,13 @@ export const NoteBook = ({ user }: { user: IUser }) => {
     setContextMenu(
       contextMenu === null
         ? {
-            mouseX: event.clientX + 2,
-            mouseY: event.clientY - 6,
-          }
+          mouseX: event.clientX + 2,
+          mouseY: event.clientY - 6,
+        }
         : // repeated contextmenu when it is already open closes it with Chrome 84 on Ubuntu
-          // Other native context menus might behave different.
-          // With this behavior we prevent contextmenu from the backdrop to re-locale existing context menus.
-          null,
+        // Other native context menus might behave different.
+        // With this behavior we prevent contextmenu from the backdrop to re-locale existing context menus.
+        null,
     );
   };
 
@@ -109,79 +109,101 @@ export const NoteBook = ({ user }: { user: IUser }) => {
   };
 
   const closeContextMenuOnSubmit = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if(e.code === "Enter")
-    {
-      if(contextMenuNotePad)
+    if (e.code === "Enter") {
+      if (contextMenuNotePad)
         updateNotePad(contextMenuNotePad);
 
       closeContextMenu();
     }
   }
 
+  const list = () => (
+    <Box
+      sx={{ width: 250 }}
+      role="presentation"
+      // onClick={() => setIsNotePadDrawerOpen(false)}
+      // onKeyDown={() => setIsNotePadDrawerOpen(false)}
+    >
+      <List>
+        <ListItem key={-1} disablePadding>
+          <ListItemButton>
+            <ListItemText primary="+ Create New Notepad" onClick={() => makeNotePad()} />
+          </ListItemButton>
+        </ListItem>
+
+        <Divider />
+
+        {notePads.map((element, index) => (
+          <ListItem key={index} disablePadding onContextMenu={e => handleContextMenu(e, element)}>
+            <ListItemButton onClick={() => setSelectedNotePad(index)}>
+              {index == selectedNotePad &&
+                <ListItemIcon>
+                  <ChevronRightRounded />
+                </ListItemIcon>
+              }
+              <ListItemText inset={index != selectedNotePad} primary={element.title} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+      <Menu
+        open={contextMenu !== null}
+        onClose={closeContextMenu}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          contextMenu !== null
+            ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+            : undefined
+        }
+      >
+        <TextField
+          id="outlined-basic"
+          label="Rename"
+          variant="outlined"
+          style={{ margin: 5 }}
+          defaultValue={contextMenuNotePad?.title}
+          onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+            // note.title = e.target.value;
+            // updateNote(note);
+            if (contextMenuNotePad)
+              updateNotePad(contextMenuNotePad);
+          }}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+
+            if (contextMenuNotePad)
+              contextMenuNotePad.title = e.target.value;
+            setContextMenuNotePad(contextMenuNotePad)
+            // updateNote(note);
+          }}
+          onKeyDown={closeContextMenuOnSubmit}
+        />
+        <MenuItem
+          onClick={() => { deleteNotePad(contextMenuNotePad); closeContextMenu() }}
+        >
+          Delete {contextMenuNotePad?.title}
+        </MenuItem>
+
+      </Menu>
+    </Box>
+  );
+
   return (
     <div>
-      <div style={{flexDirection:'row', display:'flex'}}>
-        <Tabs
-          value={selectedNotePad}
-          onChange={onTabSelect}
-          
-          variant="scrollable"
-          scrollButtons
-          allowScrollButtonsMobile
-          aria-label="scrollable auto tabs example"
-          style= {{flexShrink:1}}
-        >
-          {notePads.map((element, index) => {
-            return (<Tab label={element.title} onContextMenu={e => handleContextMenu(e, element)}/>);
-          })}
-        </Tabs>
-        <IconButton
-          onClick={() => makeNotePad()}
-          >
-          <Add/>
+      <div style={{ display: 'flex', flexDirection: 'row' }}>
+        <IconButton onClick={() => setIsNotePadDrawerOpen(true)} style={{ marginLeft: "auto" }}>
+          <KeyboardArrowLeftRounded />
         </IconButton>
-        <Menu
-          open={contextMenu !== null}
-          onClose={closeContextMenu}
-          anchorReference="anchorPosition"
-          anchorPosition={
-            contextMenu !== null
-              ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
-              : undefined
-          }
-        >
-          <TextField 
-            id="outlined-basic" 
-            label="Rename" 
-            variant="outlined"
-            style={{margin:5}}
-            defaultValue={contextMenuNotePad?.title}
-            onBlur={(e:React.FocusEvent<HTMLInputElement>) => {
-              // note.title = e.target.value;
-              // updateNote(note);
-              if(contextMenuNotePad)
-                updateNotePad(contextMenuNotePad);
-            }}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              
-              if(contextMenuNotePad)
-                contextMenuNotePad.title = e.target.value;
-                setContextMenuNotePad(contextMenuNotePad)
-              // updateNote(note);
-            }}
-            onKeyDown={closeContextMenuOnSubmit}
-          />
-          <MenuItem 
-            onClick={() => {deleteNotePad(contextMenuNotePad); closeContextMenu()}}
-          >
-            Delete {contextMenuNotePad?.title} 
-            </MenuItem>
-
-        </Menu>
       </div>
+      <SwipeableDrawer
+        open={isNotePadDrawerOpen}
+        onClose={() => setIsNotePadDrawerOpen(false)}
+        onOpen={() => setIsNotePadDrawerOpen(true)}
+        anchor="right"
+      >
+        {list()}
+      </SwipeableDrawer>
       {notePads.length > 0 &&
-        <NotePadComponent user={user} notePad={notePads[selectedNotePad]}/>}
-      
+        <NotePadComponent user={user} notePad={notePads[selectedNotePad]} />}
     </div>
 
   );
