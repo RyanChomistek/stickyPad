@@ -74,6 +74,17 @@ app.post("/UpdateNotePad", async (req: any, resp: any) => {
   }
 });
 
+app.post("/DeleteNotePad", async (req: any, resp: any) => {
+  try {
+      console.log("/DeleteNotePad")
+      const result = await NotePad.deleteOne({_id:req.body._id});
+      console.log(result)
+  } catch (e) {
+    console.log(e);
+    resp.send("Something Went Wrong");
+  }
+});
+
 app.post("/getNotes", async (req: any, resp: any) => {
     console.log("/getNotes")
     try {

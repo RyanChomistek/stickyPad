@@ -1,6 +1,6 @@
 import React, { Component, useState, useEffect } from 'react';
 import { NotePadComponent } from './NotePad';
-import { IUser, GetNotePadsRequest,INotePad, MakeNotePadsRequest, NotePad } from 'shared/build/src';
+import { IUser, GetNotePadsRequest,INotePad, MakeNotePadsRequest, NotePad, INote } from 'shared/build/src';
 import { Button, IconButton, Tabs, Tab , Menu, MenuItem, TextField} from "@mui/material";
 import { Add } from '@mui/icons-material';
 
@@ -56,10 +56,25 @@ export const NoteBook = ({ user }: { user: IUser }) => {
     });
 
     const responseBody = await result.json();
-    console.log(responseBody)
     notePad = responseBody as INotePad;
     notePads[notePads.findIndex(x => x._id === notePad._id)] = notePad;
+    setNotePads([...notePads]);
   }
+
+  const deleteNotePad = (notePad?: INotePad) => {
+    if(!notePad)
+      return;
+
+    fetch(
+      'http://localhost:5000/DeleteNotePad', {
+      method: "post",
+      body: JSON.stringify(notePad),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    setNotePads(notePads.filter(x => x._id !== notePad._id))
+  };
 
   const onTabSelect = (event: React.SyntheticEvent<Element, Event>, value: any) => {
     console.log(value);
@@ -92,6 +107,16 @@ export const NoteBook = ({ user }: { user: IUser }) => {
   const closeContextMenu = () => {
     setContextMenu(null);
   };
+
+  const closeContextMenuOnSubmit = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if(e.code === "Enter")
+    {
+      if(contextMenuNotePad)
+        updateNotePad(contextMenuNotePad);
+
+      closeContextMenu();
+    }
+  }
 
   return (
     <div>
@@ -130,6 +155,7 @@ export const NoteBook = ({ user }: { user: IUser }) => {
             label="Rename" 
             variant="outlined"
             style={{margin:5}}
+            defaultValue={contextMenuNotePad?.title}
             onBlur={(e:React.FocusEvent<HTMLInputElement>) => {
               // note.title = e.target.value;
               // updateNote(note);
@@ -137,14 +163,19 @@ export const NoteBook = ({ user }: { user: IUser }) => {
                 updateNotePad(contextMenuNotePad);
             }}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              
               if(contextMenuNotePad)
                 contextMenuNotePad.title = e.target.value;
                 setContextMenuNotePad(contextMenuNotePad)
               // updateNote(note);
             }}
-            //defaultValue={contextMenuNotePad?.title}
+            onKeyDown={closeContextMenuOnSubmit}
           />
-          <MenuItem >Delete {contextMenuNotePad?.title}</MenuItem>
+          <MenuItem 
+            onClick={() => {deleteNotePad(contextMenuNotePad); closeContextMenu()}}
+          >
+            Delete {contextMenuNotePad?.title} 
+            </MenuItem>
 
         </Menu>
       </div>

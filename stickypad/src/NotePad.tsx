@@ -11,7 +11,6 @@ import './Note.css';
 export const NotePadComponent = ({user, notePad}:{user: IUser, notePad: NotePad}) => {
   const [notes, setNotes] = useState<Map<number, Note>>(new Map<number, Note>());
   const [mousePos, setMousePos] = useState(new MousePosition(0,0));
-  const [hasDataFromServer, setHasDataFromServer] = useState(false);
 
   // Handle mouse movement so we can spawn note at the right position
   useEffect(() => {
@@ -30,9 +29,6 @@ export const NotePadComponent = ({user, notePad}:{user: IUser, notePad: NotePad}
   }, [mousePos]);
 
   const getNotesFromServer = async () => {
-    setHasDataFromServer(true);
-    console.warn(hasDataFromServer);
-
     let result = await fetch(
       'http://localhost:5000/getNotes', {
           method: "post",
@@ -42,7 +38,6 @@ export const NotePadComponent = ({user, notePad}:{user: IUser, notePad: NotePad}
           }
       });
       const responseBody = await result.json();
-      console.warn(responseBody);
       const notesFromServer = responseBody as Note[];
       const notes = new Map<number, Note>()
       notesFromServer.forEach(x => {
