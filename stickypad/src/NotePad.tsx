@@ -1,12 +1,18 @@
 import React, { Component, useState, useEffect, KeyboardEvent } from 'react';
 import { NoteComponent } from './Note';
-import { Button, IconButton } from "@mui/material";
+import { Button, IconButton, TextField } from "@mui/material";
 import { Add } from '@mui/icons-material';
 import PopupState, { bindTrigger, bindMenu } from 'material-ui-popup-state';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { Note, MousePosition, NoteProto, IUser, GetNotesRequest, NotePad, MakeNoteRequest } from "shared/build/src"
 import './Note.css';
+
+import { Grid } from '@giphy/react-components'
+import { GiphyFetch } from '@giphy/js-fetch-api'
+import { IGif } from '@giphy/js-types'
+
+const gf = new GiphyFetch('whZ244Uf1SGSXfZldBxMtgqGMyUNBUm4')
 
 export const NotePadComponent = ({user, notePad}:{user: IUser, notePad: NotePad}) => {
   const [notes, setNotes] = useState<Map<number, Note>>(new Map<number, Note>());
@@ -124,6 +130,14 @@ export const NotePadComponent = ({user, notePad}:{user: IUser, notePad: NotePad}
       }
   };
 
+  const [stickerSearchTerm, setStickerSearchTerm] = useState<string>("");
+  var getStickers = (query: string) => {
+    setStickerSearchTerm(query);
+  }
+
+  //const search = gf.search("sloth", {type: "stickers"});
+  const fetchGifs = (offset: number) => gf.search(stickerSearchTerm, { offset, type: "stickers", limit: 10 })
+
   return (
     <div className="NotePad" onContextMenu={handleContextMenu}>
       {Array.from(notes.keys()).map((element, index) => {
@@ -142,6 +156,26 @@ export const NotePadComponent = ({user, notePad}:{user: IUser, notePad: NotePad}
         }
       >
         <MenuItem onClick={makeNote}>Add Note</MenuItem>
+        <TextField
+          id="outlined-basic"
+          label="Rename"
+          variant="outlined"
+          style={{ margin: 5 }}
+          // defaultValue={contextMenuNotePad?.title}
+          onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+            // if (contextMenuNotePad)
+            //   updateNotePad(contextMenuNotePad);
+          }}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            // if (contextMenuNotePad)
+            //   contextMenuNotePad.title = e.target.value;
+            // setContextMenuNotePad(contextMenuNotePad)
+            //getStickers(e.target.value);
+          }}
+          // onKeyDown={closeContextMenuOnSubmit}
+        />
+        {<Grid width={400} columns={3} gutter={3} fetchGifs={fetchGifs} key={stickerSearchTerm} onGifClick={(gif: IGif) => {console.log(gif)}} noLink/>}
+        
       </Menu>
     </div>
   )
