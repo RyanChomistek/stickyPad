@@ -10,6 +10,15 @@
   border-radius: 8px;
 }
 
+.Sticker {
+  text-align: left;
+  width: auto;
+  height: auto;
+  padding: 10px;
+  background-color: 'transparent';
+  border-radius: 8px;
+}
+
 .noteInput {
   padding: 5px;
 }
